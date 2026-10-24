@@ -20,10 +20,51 @@
         </p>
         <div class="hero-actions">
             <a href="{{ url_for('register') }}" class="btn-primary">Create free account</a>
-            <a href="#" class="btn-primary btn-secondary">See how it works</a>
+            <a href="#" id="open-modal" class="btn-primary btn-secondary">See how it works</a>
         </div>
     </div>
 </section>
+
+<div id="video-modal" class="modal">
+    <div class="modal-overlay"></div>
+    <div class="modal-content">
+        <button id="close-modal" class="modal-close">&times;</button>
+        <div class="modal-video-container">
+            <iframe id="modal-video" width="560" height="315" src="" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const openBtn = document.getElementById('open-modal');
+        const closeBtn = document.getElementById('close-modal');
+        const modal = document.getElementById('video-modal');
+        const overlay = document.querySelector('.modal-overlay');
+        const video = document.getElementById('modal-video');
+        const videoUrl = 'https://www.youtube.com/embed/dQw4w9WgXcQ'; // Placeholder URL
+
+        function openModal() {
+            modal.classList.add('active');
+            video.src = videoUrl + '?autoplay=1';
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeModal() {
+            modal.classList.remove('active');
+            video.src = ''; // Stops the video
+            document.body.style.overflow = '';
+        }
+
+        openBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            openModal();
+        });
+
+        closeBtn.addEventListener('click', closeModal);
+        overlay.addEventListener('click', closeModal);
+    });
+</script>
 
 <section class="dashboard-preview">
     <div class="dashboard-container">
