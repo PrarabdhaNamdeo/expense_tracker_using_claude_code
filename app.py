@@ -1,12 +1,45 @@
-from flask import Flask, render_template
-from database.db import init_db, seed_db
+import os
+import sqlite3
+
+from flask import Flask, flash, redirect, render_template, request, url_for
+from werkzeug.security import generate_password_hash
+
+from database.db import create_user, get_db, init_db, seed_db
 
 app = Flask(__name__)
+
+# Secret key required for session-based flash messages.
+# Set SECRET_KEY in the environment for production; this fallback is for local development only.
+app.secret_key = os.environ.get("SECRET_KEY", "dev-only-insecure-secret-key")
 
 # Initialize and seed database on startup
 with app.app_context():
     init_db()
     seed_db()
+
+
+def validate_registration(name, email, password):
+    """Returns an error message for invalid registration input, or None if valid."""
+    if not name or not email or not password:
+        return "All fields are required."
+    if not 1 <= len(name) <= 100:
+        return "Please enter a valid name (1-100 characters)."
+
+    local_part, separator, domain = email.partition("@")
+    if not separator or "@" in domain or not local_part or "." not in domain:
+        return "Please enter a valid email address."
+
+    if len(password) < 8:
+        return "Password must be at least 8 characters."
+
+    with get_db() as conn:
+        existing = conn.execute(
+            "SELECT id FROM users WHERE email = ?", (email,)
+        ).fetchone()
+    if existing:
+        return "An account with this email already exists."
+
+    return None
 
 
 # ------------------------------------------------------------------ #
@@ -18,9 +51,32 @@ def landing():
     return render_template("landing.html")
 
 
-@app.route("/register")
+@app.route("/register", methods=["GET", "POST"])
 def register():
-    return render_template("register.html")
+    if request.method == "GET":
+        return render_template("register.html")
+
+    name = request.form.get("name", "").strip()
+    email = request.form.get("email", "").strip().lower()
+    password = request.form.get("password", "")
+
+    error = validate_registration(name, email, password)
+    if error:
+        return render_template("register.html", error=error, name=name, email=email)
+
+    try:
+        create_user(name, email, generate_password_hash(password))
+    except sqlite3.IntegrityError:
+        # Handles the race between the duplicate check and the INSERT.
+        return render_template(
+            "register.html",
+            error="An account with this email already exists.",
+            name=name,
+            email=email,
+        )
+
+    flash("Account created successfully. Please sign in.", "success")
+    return redirect(url_for("login"))
 
 
 @app.route("/login")
