@@ -34,11 +34,17 @@ every failure path.
 ## Routes
 
 - `GET /login` — render the sign-in form (now also shows flashed messages and
-  the previously entered email after a failed attempt) — **public**
+  the previously entered email after a failed attempt) — **public (guests only)**
 - `POST /login` — accepts `email` and `password` as form data, verifies the
-  credentials, writes the user to the session, and redirects — **public**
+  credentials, writes the user to the session, and redirects — **public
+  (guests only)**
 - `GET /logout` — clears the session and redirects to `/login` — **logged-in**
   (also safe and harmless when visited while logged out)
+
+`/login` and `/register` are guest-only: when a session already has a
+`user_id`, both reject `GET` and `POST` with a redirect to `/` instead of
+rendering the form. This applies retroactively to the registration route too,
+so a signed-in user can no longer reach either auth page.
 
 Existing routes (`/`, `/register`, `/terms`, `/privacy`) and the remaining
 placeholders (`/profile`, `/expenses/*`) are unchanged by this step.
@@ -133,23 +139,26 @@ Do not add Flask-Login, Flask-WTF, or any other extension in this step.
 
 ### Login route behaviour
 
-1. `GET` renders `login.html` (passing no `error`).
-2. `POST` reads `email` and `password` from `request.form`, stripping the
+1. If the session already has a `user_id`, redirect to `/` for both `GET` and
+   `POST` (guest-only route) instead of rendering the form or processing
+   credentials.
+2. `GET` renders `login.html` (passing no `error`).
+3. `POST` reads `email` and `password` from `request.form`, stripping the
    email and lowercasing it; the password is used as submitted.
-3. If either field is empty, re-render with `error = "Email and password are required."`,
+4. If either field is empty, re-render with `error = "Email and password are required."`,
    HTTP 200, and the submitted email preserved.
-4. Look the user up with a parameterised query:
+5. Look the user up with a parameterised query:
    `SELECT id, name, password_hash FROM users WHERE email = ?` using
    `get_db()` (not a raw `sqlite3.connect`), so `row_factory` applies.
-5. If the user does not exist **or** `check_password_hash()` fails, re-render
+6. If the user does not exist **or** `check_password_hash()` fails, re-render
    with the same generic message, `"Invalid email or password."`, HTTP 200.
    Do not distinguish "unknown email" from "wrong password" anywhere in the
    response, status code, or timing-sensitive branching.
-6. On success, call `session.clear()` first (prevents session fixation), then
+7. On success, call `session.clear()` first (prevents session fixation), then
    store `session["user_id"] = user["id"]` and `session["user_name"] = user["name"]`.
-7. Redirect to `url_for("landing")` for now. Step 04 will change the
+8. Redirect to `url_for("landing")` for now. Step 04 will change the
    destination to the profile page once it exists.
-8. Never accept a `next`/`redirect` query parameter — no open redirects.
+9. Never accept a `next`/`redirect` query parameter — no open redirects.
 
 ### Logout route behaviour
 
@@ -196,6 +205,9 @@ Do not add Flask-Login, Flask-WTF, or any other extension in this step.
       with no error.
 - [ ] `/login` and `/logout` behave correctly even if the user opens them in a
       fresh browser session (no stale session data required).
+- [ ] While signed in, visiting `/login` or `/register` (by URL or form POST)
+      redirects to `/` instead of showing the auth form.
+- [ ] After signing out, `/login` and `/register` are reachable again.
 - [ ] Existing pages (`/`, `/register`, `/terms`, `/privacy`) still render.
 - [ ] No new pip packages, no database schema changes, and no plaintext
       passwords stored anywhere.
