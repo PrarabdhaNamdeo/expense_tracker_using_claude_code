@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+
+{% block title %}Profile — Spendly{% endblock %}
+
+{% block content %}
+<div class="profile-page">
+
+    <header class="profile-header">
+        <h1 class="profile-title">Profile</h1>
+        <p class="profile-note">Your account and recent activity.</p>
+    </header>
+
+    <div class="profile-workspace">
+
+        <aside class="profile-rail" aria-label="Account overview">
+            <section class="profile-account" aria-labelledby="profile-account-title">
+                <div class="profile-monogram" aria-hidden="true">{{ user.initials }}</div>
+                <h2 class="profile-name" id="profile-account-title">{{ user.name }}</h2>
+                <p class="profile-email">{{ user.email }}</p>
+                <p class="profile-member">
+                    Member since <time datetime="{{ user.member_since }}">{{ user.member_since }}</time>
+                </p>
+            </section>
+
+            <section class="profile-glance" aria-label="Account summary">
+                <div class="profile-glance-item">
+                    <span class="profile-glance-label">Total spent</span>
+                    <strong class="profile-glance-value">₹ {{ "%.2f"|format(summary.total_spent) }}</strong>
+                </div>
+                <div class="profile-glance-item">
+                    <span class="profile-glance-label">Transactions</span>
+                    <strong class="profile-glance-value">{{ summary.transaction_count }}</strong>
+                </div>
+                <div class="profile-glance-item">
+                    <span class="profile-glance-label">Top category</span>
+                    <strong class="profile-glance-value">{{ summary.top_category }}</strong>
+                </div>
+            </section>
+        </aside>
+
+        <div class="profile-main">
+
+            <section class="profile-section profile-ledger" aria-labelledby="profile-ledger-title">
+                <div class="profile-section-head">
+                    <h2 class="profile-section-title" id="profile-ledger-title">Recent transactions</h2>
+                    <p class="profile-section-note">Latest entries.</p>
+                </div>
+                <div class="profile-table-wrap">
+                    <table class="profile-table">
+                        <thead>
+                            <tr>
+                                <th scope="col">Date</th>
+                                <th scope="col">Description</th>
+                                <th scope="col">Category</th>
+                                <th scope="col" class="profile-amount-col">Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for transaction in transactions %}
+                            <tr>
+                                <td><time datetime="{{ transaction.date }}">{{ transaction.date }}</time></td>
+                                <td>{{ transaction.description }}</td>
+                                <td>
+                                    <span class="profile-badge profile-badge--{{ transaction.category|lower|replace(' ', '-') }}">
+                                        {{ transaction.category }}
+                                    </span>
+                                </td>
+                                <td class="profile-amount-col">₹ {{ "%.2f"|format(transaction.amount) }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <section class="profile-section profile-breakdown" aria-labelledby="profile-breakdown-title">
+                <div class="profile-section-head">
+                    <h2 class="profile-section-title" id="profile-breakdown-title">Spending by category</h2>
+                    <p class="profile-section-note">Share of total spend.</p>
+                </div>
+                <ul class="profile-breakdown-list">
+                    {% for item in categories %}
+                    <li class="profile-breakdown-row">
+                        <span class="profile-breakdown-label">{{ item.category }}</span>
+                        <progress class="profile-progress" value="{{ item.percent }}" max="100">
+                            {{ item.percent }}%
+                        </progress>
+                        <span class="profile-breakdown-value">₹ {{ "%.2f"|format(item.total) }}</span>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </section>
+
+        </div>
+    </div>
+</div>
+{% endblock %}
