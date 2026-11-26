@@ -55,17 +55,17 @@ def validate_registration(name, email, password):
 
 # ===== SUBAGENT 1: TRANSACTION HISTORY (only edit this block) =====
 def build_transactions(user_id):
-    raise NotImplementedError("Subagent 1: transaction history")
+    return get_recent_transactions(user_id, limit=10)
 
 
 # ===== SUBAGENT 2: SUMMARY (only edit this block) =====
 def build_summary(user_id):
-    raise NotImplementedError("Subagent 2: summary")
+    return get_summary_stats(user_id)
 
 
 # ===== SUBAGENT 3: CATEGORY BREAKDOWN (only edit this block) =====
 def build_categories(user_id):
-    raise NotImplementedError("Subagent 3: category breakdown")
+    return get_category_breakdown(user_id)
 
 
 @app.context_processor
