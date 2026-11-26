@@ -18,7 +18,7 @@
                 <h2 class="profile-name" id="profile-account-title">{{ user.name }}</h2>
                 <p class="profile-email">{{ user.email }}</p>
                 <p class="profile-member">
-                    Member since <time datetime="{{ user.member_since }}">{{ user.member_since }}</time>
+                    Member since <time datetime="{{ user.member_since_iso }}">{{ user.member_since }}</time>
                 </p>
             </section>
 
@@ -81,11 +81,11 @@
                 <ul class="profile-breakdown-list">
                     {% for item in categories %}
                     <li class="profile-breakdown-row">
-                        <span class="profile-breakdown-label">{{ item.category }}</span>
-                        <progress class="profile-progress" value="{{ item.percent }}" max="100">
-                            {{ item.percent }}%
+                        <span class="profile-breakdown-label">{{ item.name }}</span>
+                        <progress class="profile-progress" value="{{ item.pct }}" max="100">
+                            {{ item.pct }}%
                         </progress>
-                        <span class="profile-breakdown-value">₹ {{ "%.2f"|format(item.total) }}</span>
+                        <span class="profile-breakdown-value">₹ {{ "%.2f"|format(item.amount) }}</span>
                     </li>
                     {% endfor %}
                 </ul>

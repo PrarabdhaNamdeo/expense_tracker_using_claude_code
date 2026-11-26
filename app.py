@@ -5,6 +5,12 @@ from flask import Flask, flash, redirect, render_template, request, session, url
 from werkzeug.security import check_password_hash, generate_password_hash
 
 from database.db import create_user, get_db, init_db, seed_db
+from database.queries import (
+    get_category_breakdown,
+    get_recent_transactions,
+    get_summary_stats,
+    get_user_by_id,
+)
 
 app = Flask(__name__)
 
@@ -43,47 +49,30 @@ def validate_registration(name, email, password):
 
 
 # ------------------------------------------------------------------ #
-# Hardcoded profile preview data — Step 05 replaces this with DB reads #
+# Step 05 — profile data helpers                                      #
+# Each marked block is owned by exactly one implementation subagent.  #
 # ------------------------------------------------------------------ #
 
-PROFILE_USER = {
-    "name": "Demo User",
-    "email": "demo@spendly.com",
-    "member_since": "2023-11-01",
-    "initials": "DU",
-}
+# ===== SUBAGENT 1: TRANSACTION HISTORY (only edit this block) =====
+def build_transactions(user_id):
+    raise NotImplementedError("Subagent 1: transaction history")
 
-PROFILE_SUMMARY = {
-    "total_spent": 269.50,
-    "transaction_count": 8,
-    "top_category": "Bills",
-}
 
-PROFILE_TRANSACTIONS = [
-    {"date": "2023-11-08", "description": "Dinner", "category": "Food", "amount": 22.00},
-    {"date": "2023-11-06", "description": "New shirt", "category": "Shopping", "amount": 60.00},
-    {"date": "2023-11-05", "description": "Movie", "category": "Entertainment", "amount": 25.00},
-    {"date": "2023-11-04", "description": "Pharmacy", "category": "Health", "amount": 45.00},
-    {"date": "2023-11-03", "description": "Internet bill", "category": "Bills", "amount": 80.00},
-    {"date": "2023-11-02", "description": "Bus pass", "category": "Transport", "amount": 12.00},
-]
+# ===== SUBAGENT 2: SUMMARY (only edit this block) =====
+def build_summary(user_id):
+    raise NotImplementedError("Subagent 2: summary")
 
-PROFILE_CATEGORIES = [
-    {"category": "Bills", "total": 80.00, "percent": 30},
-    {"category": "Shopping", "total": 60.00, "percent": 22},
-    {"category": "Health", "total": 45.00, "percent": 17},
-    {"category": "Food", "total": 37.50, "percent": 14},
-    {"category": "Entertainment", "total": 25.00, "percent": 9},
-    {"category": "Transport", "total": 12.00, "percent": 4},
-    {"category": "Other", "total": 10.00, "percent": 4},
-]
+
+# ===== SUBAGENT 3: CATEGORY BREAKDOWN (only edit this block) =====
+def build_categories(user_id):
+    raise NotImplementedError("Subagent 3: category breakdown")
 
 
 @app.context_processor
 def inject_nav_user():
     """Share the signed-in username with base.html."""
     if session.get("user_id"):
-        return {"nav_user": session.get("user_name", PROFILE_USER["name"])}
+        return {"nav_user": session.get("user_name")}
     return {"nav_user": None}
 
 
@@ -185,12 +174,18 @@ def profile():
     if not session.get("user_id"):
         return redirect(url_for("login"))
 
+    user_id = session["user_id"]
+    user = get_user_by_id(user_id)
+    if user is None:
+        session.clear()
+        return redirect(url_for("login"))
+
     return render_template(
         "profile.html",
-        user=PROFILE_USER,
-        summary=PROFILE_SUMMARY,
-        transactions=PROFILE_TRANSACTIONS,
-        categories=PROFILE_CATEGORIES,
+        user=user,
+        summary=build_summary(user_id),
+        transactions=build_transactions(user_id),
+        categories=build_categories(user_id),
     )
 
 
