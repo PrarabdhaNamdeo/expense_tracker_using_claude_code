@@ -19,6 +19,23 @@ CATEGORIES = (
 )
 
 
+def _expense_filter(user_id, date_from=None, date_to=None):
+    """Build a parameterised WHERE clause for a user's expenses.
+
+    Only fixed SQL fragments are combined here; every value stays in the
+    returned params list so callers bind it with ``?`` placeholders.
+    """
+    clauses = ["user_id = ?"]
+    params = [user_id]
+    if date_from:
+        clauses.append("date >= ?")
+        params.append(date_from)
+    if date_to:
+        clauses.append("date <= ?")
+        params.append(date_to)
+    return " AND ".join(clauses), params
+
+
 def get_user_by_id(user_id):
     """Return profile-ready account data, or None when the user is missing."""
     conn = get_db()
@@ -51,15 +68,16 @@ def get_user_by_id(user_id):
     }
 
 
-def get_summary_stats(user_id):
+def get_summary_stats(user_id, date_from=None, date_to=None):
     """Return total spent, transaction count, and top category for a user."""
+    where_sql, params = _expense_filter(user_id, date_from, date_to)
     conn = get_db()
     try:
         totals = conn.execute(
             "SELECT COUNT(*) AS transaction_count, "
             "COALESCE(SUM(amount), 0) AS total_spent "
-            "FROM expenses WHERE user_id = ?",
-            (user_id,),
+            "FROM expenses WHERE " + where_sql,
+            params,
         ).fetchone()
 
         if totals["transaction_count"] == 0:
@@ -70,9 +88,9 @@ def get_summary_stats(user_id):
             }
 
         top = conn.execute(
-            "SELECT category FROM expenses WHERE user_id = ? "
+            "SELECT category FROM expenses WHERE " + where_sql + " "
             "GROUP BY category ORDER BY SUM(amount) DESC, category ASC LIMIT 1",
-            (user_id,),
+            params,
         ).fetchone()
     finally:
         conn.close()
@@ -84,14 +102,15 @@ def get_summary_stats(user_id):
     }
 
 
-def get_recent_transactions(user_id, limit=10):
+def get_recent_transactions(user_id, limit=10, date_from=None, date_to=None):
     """Return the newest expenses for a user as template-ready dicts."""
+    where_sql, params = _expense_filter(user_id, date_from, date_to)
     conn = get_db()
     try:
         rows = conn.execute(
             "SELECT date, description, category, amount FROM expenses "
-            "WHERE user_id = ? ORDER BY date DESC, id DESC LIMIT ?",
-            (user_id, limit),
+            "WHERE " + where_sql + " ORDER BY date DESC, id DESC LIMIT ?",
+            params + [limit],
         ).fetchall()
     finally:
         conn.close()
@@ -107,14 +126,15 @@ def get_recent_transactions(user_id, limit=10):
     ]
 
 
-def get_category_breakdown(user_id):
+def get_category_breakdown(user_id, date_from=None, date_to=None):
     """Return the seven fixed categories with integer percentages summing to 100."""
+    where_sql, params = _expense_filter(user_id, date_from, date_to)
     conn = get_db()
     try:
         rows = conn.execute(
             "SELECT category, SUM(amount) AS total FROM expenses "
-            "WHERE user_id = ? GROUP BY category",
-            (user_id,),
+            "WHERE " + where_sql + " GROUP BY category",
+            params,
         ).fetchall()
     finally:
         conn.close()
