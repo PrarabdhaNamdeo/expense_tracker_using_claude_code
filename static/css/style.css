@@ -611,6 +611,99 @@ a { color: inherit; text-decoration: none; }
     margin-top: 0.35rem;
 }
 
+.profile-filter {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: 1rem;
+    padding: 1rem 1.25rem;
+    background: var(--paper-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+}
+
+.profile-filter-field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+}
+
+.profile-filter-field label {
+    font-size: 0.7rem;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-muted);
+}
+
+.profile-filter-field input {
+    min-width: 11rem;
+    padding: 0.55rem 0.7rem;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--paper-card);
+    color: var(--ink);
+    font: inherit;
+    font-size: 0.9rem;
+}
+
+.profile-filter-field input:focus {
+    outline: 2px solid var(--accent);
+    outline-offset: 1px;
+}
+
+.profile-filter-actions {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-left: auto;
+}
+
+.profile-filter-submit {
+    padding: 0.55rem 1.25rem;
+    border: none;
+    border-radius: var(--radius-sm);
+    background: var(--accent);
+    color: var(--paper-card);
+    font: inherit;
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+}
+
+.profile-filter-submit:hover { background: var(--ink-soft); }
+
+.profile-filter-clear {
+    color: var(--ink-muted);
+    font-size: 0.9rem;
+    text-decoration: underline;
+}
+
+.profile-filter-clear:hover { color: var(--accent); }
+
+.profile-filter-error {
+    padding: 0.75rem 1rem;
+    border: 1px solid var(--danger);
+    border-radius: var(--radius-sm);
+    background: var(--danger-light);
+    color: var(--danger);
+    font-size: 0.9rem;
+}
+
+.profile-filter-error p + p { margin-top: 0.25rem; }
+
+.profile-filter-active {
+    color: var(--ink-muted);
+    font-size: 0.9rem;
+}
+
+.profile-empty {
+    padding: 1rem 0;
+    color: var(--ink-muted);
+    font-size: 0.9rem;
+    text-align: center;
+}
+
 .profile-workspace {
     display: grid;
     grid-template-columns: 280px 1fr;
@@ -855,6 +948,11 @@ a { color: inherit; text-decoration: none; }
 
 @media (max-width: 600px) {
     .profile-rail { grid-template-columns: 1fr; }
+    .profile-filter-actions {
+        width: 100%;
+        margin-left: 0;
+        justify-content: space-between;
+    }
     .profile-monogram { width: 4rem; height: 4rem; font-size: 1.5rem; }
     .profile-section-head { flex-direction: column; gap: 0.25rem; }
     .profile-table { font-size: 0.8rem; }

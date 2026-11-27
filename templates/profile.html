@@ -10,6 +10,49 @@
         <p class="profile-note">Your account and recent activity.</p>
     </header>
 
+    <form class="profile-filter" method="get" action="{{ url_for('profile') }}">
+        <div class="profile-filter-field">
+            <label for="profile-filter-from">From</label>
+            <input
+                type="date"
+                id="profile-filter-from"
+                name="from"
+                value="{{ filter_from or '' }}"
+            >
+        </div>
+        <div class="profile-filter-field">
+            <label for="profile-filter-to">To</label>
+            <input
+                type="date"
+                id="profile-filter-to"
+                name="to"
+                value="{{ filter_to or '' }}"
+            >
+        </div>
+        <div class="profile-filter-actions">
+            <button type="submit" class="profile-filter-submit">Apply</button>
+            <a class="profile-filter-clear" href="{{ url_for('profile') }}">Clear</a>
+        </div>
+    </form>
+
+    {% if filter_errors %}
+    <div class="profile-filter-error" role="alert">
+        {% for error in filter_errors %}<p>{{ error }}</p>{% endfor %}
+    </div>
+    {% endif %}
+
+    {% if filter_active %}
+    <p class="profile-filter-active">
+        {% if filter_from and filter_to %}
+            Showing {{ filter_from }} to {{ filter_to }}
+        {% elif filter_from %}
+            Showing expenses from {{ filter_from }}
+        {% else %}
+            Showing expenses up to {{ filter_to }}
+        {% endif %}
+    </p>
+    {% endif %}
+
     <div class="profile-workspace">
 
         <aside class="profile-rail" aria-label="Account overview">
@@ -67,6 +110,12 @@
                                 </td>
                                 <td class="profile-amount-col">₹ {{ "%.2f"|format(transaction.amount) }}</td>
                             </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="4" class="profile-empty">
+                                    {% if filter_active %}No expenses match this date range.{% else %}No expenses to show.{% endif %}
+                                </td>
+                            </tr>
                             {% endfor %}
                         </tbody>
                     </table>
@@ -86,6 +135,10 @@
                             {{ item.pct }}%
                         </progress>
                         <span class="profile-breakdown-value">₹ {{ "%.2f"|format(item.amount) }}</span>
+                    </li>
+                    {% else %}
+                    <li class="profile-empty">
+                        {% if filter_active %}No expenses match this date range.{% else %}No expenses to show.{% endif %}
                     </li>
                     {% endfor %}
                 </ul>
